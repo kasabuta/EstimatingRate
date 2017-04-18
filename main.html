@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"> 
+<html> 
+
+<HEAD> 
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+<meta http-equiv="Content-Script-Type" content="text/javascript"> 
+<META name="GENERATOR" content="IBM WebSphere Studio Homepage Builder Version 13.0.6.0 for Windows"> 
+<META http-equiv="Content-Style-Type" content="text/css"> 
+
+<script src="d3.v3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="mt.js"></script>
+<script type="text/javascript" src="hmm_funcs.js"></script>
+<script type="text/javascript" src="main.js"></script>
+
+<title>Histogram Optimization</title>
+</HEAD>
+
+<BODY onLoad="ResetData();Main()" style="font-family:Optima,Arial">
+
+<div style="width:920">
+<!-- Header -->
+<h2>Toolbox:Estimating the firing rate</h2> 
+<!-- <HR width="920" align="left"> -->
+<!-- Web Application -->
+<FORM name="data">
+<font face="Arial Black" size=3><strong>1. You can paste your data here,</strong></font>&nbsp;&nbsp;
+<input type="button" style="font:10.5pt MS ゴシック; font-weight: bold;" value="or, replace it with another sample." onclick="RandomData();Main();">
+or upload your data.&nbsp;&nbsp;
+<input type="file" id="selfile" style="display:none;">
+<input type="button" value="upload" style="font:10.5pt MS ゴシック; font-weight: bold;" onClick="document.getElementById('selfile').click();">
+
+<script>
+var obj1 = document.getElementById("selfile");
+//ダイアログでファイルが選択された時
+obj1.addEventListener("change",function(evt){
+
+  var file = evt.target.files;
+
+  //FileReaderの作成
+  var reader = new FileReader();
+  //テキスト形式で読み込む
+  reader.readAsText(file[0]);
+  
+  //読込終了後の処理
+  reader.onload = function(ev){
+  //テキストエリアに表示する
+  document.data.spikes.value = reader.result;
+  Main();
+  }
+},false);
+</script>
+<br>
+<font size = "2pt">
+&nbsp;&nbsp;&nbsp;&nbsp;<textarea name="spikes" rows="3" cols="120" style="font-size:9.5pt"></textarea><br>
+&nbsp;&nbsp;&nbsp;&nbsp;Please list spike times in increasing order, separated by a comma or a space.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Your data would not leak out, because the computation is carried out by your computer.<br><br>
+</font>
+<font face="Arial Black" size=3><strong>2. </strong></font>
+<INPUT type="button" style="font:10.5pt MS ゴシック; font-weight: bold;" value="Estimate the firing rate" onclick="Main();">
+<div id="loading" style="font-size:10pt; display:inline-block; visibility:hidden"><img src="loading.gif">processing...</div><br>
+
+<font size="2pt">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(A) Histogram: L2 risk minimization [1]<br>
+<div id="graph_SS" width="800" height="60"></div>
+<div id="raster_SS" width="800" height="12"></div>
+<div id="optimal_SS" style="font-size:11pt; margin-bottom:6px"></div>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(B) Histogram: L2 risk minimization for non-Poisson spike trains [2]<br>
+<div id="graph_OS" width="800" height="60"></div>
+<div id="raster_OS" width="800" height="12"></div>
+<div id="optimal_OS" style="font-size:11pt; margin-bottom:6px"></div>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(C) Kernel density estimation: L2 risk minimization [3]<br>
+<div id="graph_Kernel" width="800" height="60"></div>
+<div id="raster_Kernel" width="800" height="12"></div>
+<div id="optimal_Kernel" style="font-size:11pt; margin-bottom:6px"></div>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(D) Kernel density estimation: L2 risk minimization, reflection boundary.<br>
+<div id="graph_Kernel2" width="800" height="60"></div>
+<div id="raster_Kernel2" width="800" height="12"></div>
+<div id="optimal_Kernel2" style="font-size:11pt; margin-bottom:6px"></div>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(E) Bayesian rate estimation [4], [5]<br>
+<div id="graph_Bayes" width="800" height="60"></div>
+<div id="raster_Bayes" width="800" height="12"></div>
+<div id="optimal_Bayes" style="font-size:11pt; margin-bottom:6px"></div>
+<!--
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(F) Bayesian rate estimation for non-Poisson spike trains [4], [5]<br>
+<div id="graph_BayesNP" width="800" height="60"></div>
+<div id="raster_BayesNP" width="800" height="12"></div>
+<div id="optimal_BayesNP" style="font-size:11pt; margin-bottom:6px"></div>
+-->
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(F) Two-state Hidden Markov Model [6]<br>
+<div id="graph_HMM" width="800" height="60"></div>
+<div id="raster_HMM" width="800" height="12"></div>
+<div id="optimal_HMM" style="font-size:11pt; margin-bottom:6px"></div>
+<br>
+<!--<font face="Arial Black" size=3><strong>3. Output data sheet.</strong></font>&nbsp;&nbsp;
+<INPUT type="button" value="Click" onclick="OutputResults()"><br>
+</FORM>
+-->
+</font>
+<HR width="920" align="left">
+
+
+<!-- Contact -->
+<FONT size="-1">[1] Shimazaki H and Shinomoto S (2007) A method for selecting the bin size of a time histogram. Neural Computation 19:1503-1700.<br>
+[2] Omi T and Shinomoto S (2011) Optimizing time histograms for non-Poissonian spike trains. Neural Computation 23:3125-3144.<br>
+[3] Shimazaki H and Shinomoto S (2010) Kernel bandwidth optimization in spike rate estimation. J. Computational Neuroscience 29:171-182.<br>
+[4] Koyama S and Shinomoto S (2005) Empirical Bayes interpretations of random point events. J. Phys. A 38:L531-L537.<br>
+[5] Shimokawa T and Shinomoto S (2009) Estimating instantaneous irregularity of neuronal firing. Neural Computation 21:1931-1951.<br>
+[6] Mochizuki Y and Shinomoto S (2014) Analog and digital codes in the brain. Physical Review E 89:022705.</FONT><br>
+
+</BODY>
+
+</html> 
