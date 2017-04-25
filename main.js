@@ -53,7 +53,7 @@ function RandomData() {
     return 0;
 }
 
-var Base=20.0;
+var Base=30.0;
 var Amplitude=10.0;
 var TIME=10.0;
 var Period=[2.0/Math.PI,1.41421356/Math.PI,0.8989898/Math.PI];
@@ -120,9 +120,9 @@ function Main() {
   DrawGraph_SSOS(spike_time);			// 旧法新法
   DrawGraph_Kernel(spike_time);		// カーネル法
   DrawGraph_Kernel2(spike_time);	// カーネル法(折り返し)
-  //DrawGraph_Bayes(spike_time);	// ベイズ推定
   //DrawGraph_BayesNP(spike_time);	// ノンポアソンベイズ推定
   DrawGraph_HMM(spike_time);		// 隠れマルコフモデル
+  DrawGraph_Bayes(spike_time);	// ベイズ推定
   
   //DrawGraph(spike_time, SS(spike_time), "SS");  // 旧法
   //DrawGraph(spike_time, OS(spike_time), "OS");  // 新法
@@ -268,7 +268,6 @@ function Bayes(spike_time){
 			n -= 1;
 		}
 	}
-	
 }
 
 function DrawGraph_SSOS(spike_time){
@@ -389,11 +388,40 @@ function DrawGraph_HMM(spike_time){
 		var x_pos=x_base+i*width_graph/opty.length;
 		var height=height_hist*opty[i][1]/maxy;
 	    if (onset + (i + 1) * opt < offset){
-	    	svg.append("rect").attr("x", x_pos).attr("y", height_graph-height).attr("width", width_graph/opty.length+1).attr("height", height).attr("fill","pink");
+	    	svg.append("rect").attr("x", x_pos).attr("y", height_graph-height).attr("width", width_graph/opty.length+1).attr("height", height).attr("fill","#BA55D3");
 	    }
 	}
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
 	document.getElementById("optimal_HMM").innerHTML = "<INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_HMM()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
+}
+
+function DrawGraph_Bayes(spike_time){
+	var wrap = d3.select('#graph_Bayes');
+	wrap.select("svg").remove();	// 初期化
+	var svg = wrap.append("svg").attr("width",x_base+width_graph).attr("height",height_graph);
+	var url1 = "http://www.ton.scphys.kyoto-u.ac.jp/~shino/toolbox/ssBayes/bayes.html";
+	var url2 = "http://www.ton.scphys.kyoto-u.ac.jp/~shino/toolbox/ssNeCo09/page_SULAB2.html";
+
+	var maxy;
+	var xy = new Array();
+	
+	var kalman_data = SecondStage(spike_time);
+	// ThirdStage(spike_time,beta);
+	for(var i=0; i<kalman_data[0].length; i++){
+		if(i==0 || maxy<kalman_data[0][i]) maxy=kalman_data[0][i];
+	}
+	document.data.spikes.value = (spike_time[i]/2+spike_time[i+1]/2-spike_time[0]);
+	for (var i = 0;i<spike_time.length-1;i++) {
+		xy[i] = [x_base + width_graph*(spike_time[i]/2+spike_time[i+1]/2-spike_time[0])/(spike_time[spike_time.length-1]-spike_time[0]), height_graph - height_graph*kalman_data[0][i]/(1.2*maxy)];
+	}
+	xy.unshift([x_base, height_graph]);
+	xy.push([x_base+width_graph, height_graph]);
+	var line = d3.svg.line()
+	      .x(function(d) {return d[0];})
+	      .y(function(d) {return d[1];});
+	svg.append("path").attr("d", line(xy) ).attr("fill","#FFC0CB").attr("stroke","#DFA0AB");
+	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
+	document.getElementById("optimal_Bayes").innerHTML = "　<INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:468px;\" value=\"data sheet\" onclick=\"OutputResults_Bayes()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:590px\" value=\"more detail1\" onclick=\"location.href='" + url1 + "'\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px\" value=\"more detail2\" onclick=\"location.href='" + url2 + "'\">";
 }
 
 
@@ -580,5 +608,22 @@ function OutputResults_HMM() {
 		result+= (time.toFixed(2))+ "&nbsp;&nbsp;&nbsp;&nbsp;" + opty[i][1]+ "<br>";
 		time+=opt;
 	}
+	document.write(result);
+}
+
+function OutputResults_Bayes(){
+	var spike_time = new Array();
+	PostData(spike_time);
+	var opty;
+	//opty = NGF();
+	var result;
+	result+="The rate estimated by Bayesian model.<br> time / rate<br>";
+/*
+	for(var i=0;i<opty.length;i++)
+	{
+		result+= (time.toFixed(2))+ "&nbsp;&nbsp;&nbsp;&nbsp;" + opty[i][1]+ "<br>";
+		time+=opt;
+	}
+	*/
 	document.write(result);
 }
