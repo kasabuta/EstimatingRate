@@ -1,7 +1,7 @@
 // グラフサイズ
 var x_base = 20;
 var width_graph = 780;
-var height_spike = 12;
+var height_spike = 10;
 var height_graph = 60;
 var height_hist =54;
 var max_repeat = 500;
@@ -113,6 +113,7 @@ function Main() {
   PostData(spike_time);
 
   spike_num = spike_time.length;
+  // sort機能の実装を予定
   onset = spike_time[0] - 0.001 * (spike_time[spike_num - 1] - spike_time[0]);
   offset = spike_time[spike_num - 1] + 0.001 * (spike_time[spike_num - 1] - spike_time[0]);
 
@@ -388,7 +389,7 @@ function DrawGraph_HMM(spike_time){
 		var x_pos=x_base+i*width_graph/opty.length;
 		var height=height_hist*opty[i][1]/maxy;
 	    if (onset + (i + 1) * opt < offset){
-	    	svg.append("rect").attr("x", x_pos).attr("y", height_graph-height).attr("width", width_graph/opty.length+1).attr("height", height).attr("fill","#BA55D3");
+	    	svg.append("rect").attr("x", x_pos).attr("y", height_graph-height).attr("width", width_graph/opty.length+1).attr("height", height).attr("fill","#DA75F3");
 	    }
 	}
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
@@ -410,7 +411,6 @@ function DrawGraph_Bayes(spike_time){
 	for(var i=0; i<kalman_data[0].length; i++){
 		if(i==0 || maxy<kalman_data[0][i]) maxy=kalman_data[0][i];
 	}
-	document.data.spikes.value = (spike_time[i]/2+spike_time[i+1]/2-spike_time[0]);
 	for (var i = 0;i<spike_time.length-1;i++) {
 		xy[i] = [x_base + width_graph*(spike_time[i]/2+spike_time[i+1]/2-spike_time[0])/(spike_time[spike_time.length-1]-spike_time[0]), height_graph - height_graph*kalman_data[0][i]/(1.2*maxy)];
 	}
@@ -421,7 +421,7 @@ function DrawGraph_Bayes(spike_time){
 	      .y(function(d) {return d[1];});
 	svg.append("path").attr("d", line(xy) ).attr("fill","#FFC0CB").attr("stroke","#DFA0AB");
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
-	document.getElementById("optimal_Bayes").innerHTML = "　<INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:468px;\" value=\"data sheet\" onclick=\"OutputResults_Bayes()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:590px\" value=\"more detail1\" onclick=\"location.href='" + url1 + "'\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px\" value=\"more detail2\" onclick=\"location.href='" + url2 + "'\">";
+	document.getElementById("optimal_Bayes").innerHTML = "　<INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:446px;\" value=\"data sheet\" onclick=\"OutputResults_Bayes()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:568px\" value=\"more detail1\" onclick=\"location.href='" + url1 + "'\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px\" value=\"more detail2\" onclick=\"location.href='" + url2 + "'\">";
 }
 
 
