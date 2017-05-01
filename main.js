@@ -116,14 +116,28 @@ function Main() {
   // sort機能の実装を予定
   onset = spike_time[0] - 0.001 * (spike_time[spike_num - 1] - spike_time[0]);
   offset = spike_time[spike_num - 1] + 0.001 * (spike_time[spike_num - 1] - spike_time[0]);
-
-  SpikeRaster(spike_time);			
+  
+  //現在のローカル時間が格納された、Date オブジェクトを作成する
+  var date_obj = new Date();
+  // 測定開始時に経過時間を変数に残す
+  var time_old = new Array();
+  time_old[0] = new Date().getTime();
+  SpikeRaster(spike_time);
+  time_old[1] = new Date().getTime();
   DrawGraph_SSOS(spike_time);			// 旧法新法
+  time_old[2] = new Date().getTime();
   DrawGraph_Kernel(spike_time);		// カーネル法
+  time_old[3] = new Date().getTime();
   DrawGraph_Kernel2(spike_time);	// カーネル法(折り返し)
+  time_old[4] = new Date().getTime();
   //DrawGraph_BayesNP(spike_time);	// ノンポアソンベイズ推定
-  DrawGraph_HMM(spike_time);		// 隠れマルコフモデル
+  //time_old[5] = new Date().getTime();
   DrawGraph_Bayes(spike_time);	// ベイズ推定
+  time_old[5] = new Date().getTime();
+  DrawGraph_HMM(spike_time);		// 隠れマルコフモデル
+  time_old[6] = new Date().getTime();
+  
+  document.getElementById("time").innerHTML = "Spike Raster : " + (time_old[1]-time_old[0]) + "<br>SSOS : " + (time_old[2]-time_old[1]) + "<br>Kernel1 : " + (time_old[3]-time_old[2]) + "<br>Kernel2 : " + (time_old[4]-time_old[3]) + "<br>Bayes : " + (time_old[5]-time_old[4]) + "<br>HMM : " + (time_old[6]-time_old[5]);
   
   //DrawGraph(spike_time, SS(spike_time), "SS");  // 旧法
   //DrawGraph(spike_time, OS(spike_time), "OS");  // 新法
@@ -136,8 +150,10 @@ function Main() {
 function PostData(spike_time) {
   var data_text = document.data.spikes.value.replace(/\r?\n/g," ").replace(/^\s+|\s+$/g,"");
   var data_seq = data_text.split(/[^0-9\.]+/);
+  //document.data.spikes.value = ""
   for (var i = 0; i < data_seq.length; i++) {
     spike_time[i] = Number(data_seq[i]);
+    // document.data.spikes.value += Math.round(spike_time[i]*1000) + " ";
   }
 }
 
@@ -295,7 +311,7 @@ function DrawGraph_SSOS(spike_time){
 	    }
 	}
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
-	document.getElementById("optimal_SS").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Optimal bin size = <font color=\"red\">" + opt[0].toFixed(2) + "</font><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_SS()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px;\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
+	document.getElementById("optimal_SS").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Optimal bin size = <font color=\"red\">" + opt[0].toFixed(2) + "</font><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_SS()\"><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:690px;\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
 	
 	//OS
 	wrap = d3.select('#graph_OS');
@@ -317,7 +333,7 @@ function DrawGraph_SSOS(spike_time){
 	    }
 	}
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
-	document.getElementById("optimal_OS").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Optimal bin size = <font color=\"red\">" + opt[1].toFixed(2) + "</font>&nbsp;&nbsp;&nbsp;&nbsp;Irregularity is estimated as Lv = <font color=\"red\">" + lv.toFixed(2) + "</font><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_OS()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px;\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
+	document.getElementById("optimal_OS").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Optimal bin size = <font color=\"red\">" + opt[1].toFixed(2) + "</font>&nbsp;&nbsp;&nbsp;&nbsp;Irregularity is estimated as Lv = <font color=\"red\">" + lv.toFixed(2) + "</font><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_OS()\"><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:690px;\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
 }
 
 
@@ -343,7 +359,7 @@ function DrawGraph_Kernel(spike_time){
 	      .y(function(d) {return d[1];});
 	svg.append("path").attr("d", line(xy) ).attr("fill","#F0E68C").attr("stroke","#D0C66C");
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
-	document.getElementById("optimal_Kernel").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Optimal bandwidth = <font color=\"red\">" + opt.toFixed(2) + "</font><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_Kernel()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px;\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
+	document.getElementById("optimal_Kernel").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Optimal bandwidth = <font color=\"red\">" + opt.toFixed(2) + "</font><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_Kernel()\"><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:690px;\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
 }
 
 function DrawGraph_Kernel2(spike_time){
@@ -368,7 +384,7 @@ function DrawGraph_Kernel2(spike_time){
 	      .y(function(d) {return d[1];});
 	svg.append("path").attr("d", line(xy) ).attr("fill","#FFDEAD").attr("stroke","#DFBE8D");
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
-	document.getElementById("optimal_Kernel2").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Optimal bandwidth = <font color=\"red\">" + opt.toFixed(2) + "</font><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_Kernel2()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px;\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
+	document.getElementById("optimal_Kernel2").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Optimal bandwidth = <font color=\"red\">" + opt.toFixed(2) + "</font><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_Kernel2()\"><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:690px;\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
 }
 
 function DrawGraph_HMM(spike_time){
@@ -379,7 +395,7 @@ function DrawGraph_HMM(spike_time){
 	
 	var x,y,maxy;
 	var opty;
-	var opt = 0.05;
+	var opt = ((offset-onset)/(spike_time.length-1));
 	opty = get_hmm_ratefunc(spike_time, opt);	//描画の細かさ0.05 ?
 	for(var i=0; i<opty.length; i++){
 		if(i==0 || maxy<opty[i][1]) maxy=opty[i][1];
@@ -388,12 +404,15 @@ function DrawGraph_HMM(spike_time){
 	for (var i = 0; i < opty.length; i++) {
 		var x_pos=x_base+i*width_graph/opty.length;
 		var height=height_hist*opty[i][1]/maxy;
-	    if (onset + (i + 1) * opt < offset){
+	    if (onset + i * opt < offset){
+	    	svg.append("rect").attr("x", x_pos).attr("y", height_graph-height).attr("width", width_graph/opty.length+1).attr("height", height).attr("fill","#DA75F3");
+	    }else{
+			x_pos=offset;
 	    	svg.append("rect").attr("x", x_pos).attr("y", height_graph-height).attr("width", width_graph/opty.length+1).attr("height", height).attr("fill","#DA75F3");
 	    }
 	}
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
-	document.getElementById("optimal_HMM").innerHTML = "<INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_HMM()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
+	document.getElementById("optimal_HMM").innerHTML = "<INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:568px;\" value=\"data sheet\" onclick=\"OutputResults_HMM()\"><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:690px\" value=\"more detail\" onclick=\"location.href='" + url + "'\">";
 }
 
 function DrawGraph_Bayes(spike_time){
@@ -415,13 +434,14 @@ function DrawGraph_Bayes(spike_time){
 		xy[i] = [x_base + width_graph*(spike_time[i]/2+spike_time[i+1]/2-spike_time[0])/(spike_time[spike_time.length-1]-spike_time[0]), height_graph - height_graph*kalman_data[0][i]/(1.2*maxy)];
 	}
 	xy.unshift([x_base, height_graph]);
+	xy.push([x_base+width_graph, height_graph - height_graph*kalman_data[0][spike_time.length-2]/(1.2*maxy)]);
 	xy.push([x_base+width_graph, height_graph]);
 	var line = d3.svg.line()
 	      .x(function(d) {return d[0];})
 	      .y(function(d) {return d[1];});
 	svg.append("path").attr("d", line(xy) ).attr("fill","#FFC0CB").attr("stroke","#DFA0AB");
 	svg.append("rect").attr("x", x_base).attr("y", 0).attr("width", width_graph).attr("height", height_graph).attr("stroke","black").attr("stroke-width",1).attr("fill","none");
-	document.getElementById("optimal_Bayes").innerHTML = "　<INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:446px;\" value=\"data sheet\" onclick=\"OutputResults_Bayes()\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:568px\" value=\"more detail1\" onclick=\"location.href='" + url1 + "'\"><INPUT type=\"button\" style=\"font:9pt MS ゴシック; font-weight: bold; position:absolute; left:690px\" value=\"more detail2\" onclick=\"location.href='" + url2 + "'\">";
+	document.getElementById("optimal_Bayes").innerHTML = "　<INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:446px;\" value=\"data sheet\" onclick=\"OutputResults_Bayes()\"><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:568px\" value=\"more detail1\" onclick=\"location.href='" + url1 + "'\"><INPUT type=\"button\" style=\"font:9pt Arial; font-weight: bold; position:absolute; left:690px\" value=\"more detail2\" onclick=\"location.href='" + url2 + "'\">";
 }
 
 
@@ -510,14 +530,25 @@ function OutputResults_SS() {
 	  var opt_binsize = new Array();
 	  var opt_rate = new Array();
 	  opt_binsize = SSOS(spike_time);
-	  result = result = "The optimal bin size is " + opt_binsize[0].toFixed(2) + ".";
-
-	  result += "<br><br><br>The rate estimated based on Poissonian optimization method.<br> time / rate<br>";
 	  EstimateRate(spike_time, opt_binsize[0], opt_rate);
-	  for (var i = 0; i < opt_rate.length; i++) {
-	    result += (onset + i * opt_binsize[0]).toFixed(2) + "&nbsp;&nbsp;&nbsp;&nbsp;" + opt_rate[i].toFixed(2) + "<br>" + (onset + (i + 1) * opt_binsize[0]).toFixed(2) + "&nbsp;&nbsp;&nbsp;&nbsp;" + opt_rate[i].toFixed(2) + "<br>";
-	  }
-	  document.write(result);
+	  WIN_RESULTS = window.open();
+	  WIN_RESULTS.document.open();
+	  WIN_RESULTS.document.writeln("<title>Data Sheet of the Optimized Histogram</title>");
+	  WIN_RESULTS.document.writeln("<h2>Histgram: Non-Poissonian optimization</h2>");
+	  WIN_RESULTS.document.writeln("Optimal binsize: <b>"+opt_binsize[0].toFixed(2)+"</b><br><br>");
+	  WIN_RESULTS.document.writeln("<table border=1><tr align=center><td width=150> X-AXIS (time)  </td>");
+		WIN_RESULTS.document.writeln("<td>0.00</td>");
+		for (var i=0;i<opt_rate.length;i++) {
+			WIN_RESULTS.document.writeln("<td>" + (onset + i * opt_binsize[0]).toFixed(2) + "</td><td>" + (onset + (i + 1) * opt_binsize[0]).toFixed(2) + "</td>");
+		}
+		WIN_RESULTS.document.writeln("<td>" + (onset + (opt_rate.length-1) * opt_binsize[0]).toFixed(2) + "</td></tr><tr align=center><td width=150> Y-AXIS (density) </td>");
+		WIN_RESULTS.document.writeln("<td>0.00</td>");
+		for (var i=0;i<opt_rate.length;i++) {
+			WIN_RESULTS.document.writeln("<td>"+ opt_rate[i].toFixed(2)+"</td><td>"+ opt_rate[i].toFixed(2) +"</td>");
+		}
+		WIN_RESULTS.document.writeln("<td>0.00</td>");
+		WIN_RESULTS.document.writeln("</tr></table><br>");
+		WIN_RESULTS.document.close();
 	}
 
 function OutputResults_OS() {
@@ -527,13 +558,25 @@ function OutputResults_OS() {
 	var opt_binsize = new Array();
 	var opt_rate = new Array();
 	opt_binsize = SSOS(spike_time);
-	result = "The optimal bin size is " + opt_binsize[1].toFixed(2) + ".<br>The non-Poisson characteristic of your data is estimated by Lv as Lv = " + lv.toFixed(2) + " (" + np + " firing).";
-	result += "<br><br><br>The rate estimated based on non-Poissonian optimization method.<br> time / rate<br>";
 	EstimateRate(spike_time, opt_binsize[1], opt_rate);
-	for (var i = 0; i < opt_rate.length; i++) {
-		result += (onset + i * opt_binsize[1]).toFixed(2) + "&nbsp;&nbsp;&nbsp;&nbsp;" + opt_rate[i].toFixed(2) + "<br>" + (onset + (i + 1) * opt_binsize[1]).toFixed(2) + "&nbsp;&nbsp;&nbsp;&nbsp;" + opt_rate[i].toFixed(2) + "<br>";
+	WIN_RESULTS = window.open();
+	WIN_RESULTS.document.open();
+	WIN_RESULTS.document.writeln("<title>Data Sheet of the Optimized Histogram</title>");
+	WIN_RESULTS.document.writeln("<h2>Histgram: Non-Poissonian optimization</h2>");
+	WIN_RESULTS.document.writeln("Optimal binsize: <b>"+opt_binsize[1].toFixed(2)+"</b><br>Lv: <b>" + lv.toFixed(2) + "</b> (" + np + " firing)<br><br>");
+	WIN_RESULTS.document.writeln("<table border=1><tr align=center><td width=150> X-AXIS (time)  </td>");
+	WIN_RESULTS.document.writeln("<td>0.00</td>");
+	for (var i=0;i<opt_rate.length;i++) {
+		WIN_RESULTS.document.writeln("<td>" + (onset + i * opt_binsize[1]).toFixed(2) + "</td><td>" + (onset + (i + 1) * opt_binsize[1]).toFixed(2) + "</td>");
 	}
-	document.write(result);
+	WIN_RESULTS.document.writeln("<td>" + (onset + (opt_rate.length-1) * opt_binsize[1]).toFixed(2) + "</td></tr><tr align=center><td width=150> Y-AXIS (density) </td>");
+	WIN_RESULTS.document.writeln("<td>0.00</td>");
+	for (var i=0;i<opt_rate.length;i++) {
+		WIN_RESULTS.document.writeln("<td>"+ opt_rate[i].toFixed(2)+"</td><td>"+ opt_rate[i].toFixed(2) +"</td>");
+	}
+	WIN_RESULTS.document.writeln("<td>0.00</td>");
+	WIN_RESULTS.document.writeln("</tr></table><br>");
+	WIN_RESULTS.document.close();
 }
 
 function OutputResults_Kernel() {
@@ -544,24 +587,18 @@ function OutputResults_Kernel() {
 	kern(spike_time, opt, opty);
 	WIN_RESULTS = window.open();
 	WIN_RESULTS.document.open();
-	WIN_RESULTS.document.writeln("<title>Data Sheet of the Optimized Histogram</title>");																																				
-	WIN_RESULTS.document.writeln("<blockquote>&copy; 2009 Hideaki Shimazaki<br><br>");
-	WIN_RESULTS.document.writeln("<h2>Data Sheet of Your Optimized Kernel Density Estimation</h2>");
-	WIN_RESULTS.document.writeln("For the details of the method, please refer to<br>Shimazaki H. and Shinomoto S., Kernel Bandwidth Optimization in Spike Rate Estimation, <em>Journal of Computational Neuroscience</em>, Vol.29, Pages 171-182., 2010 <a href=http://www.springerlink.com/content/g22785288648l239/fulltext.pdf target=_blank  onclick=javascript:urchinTracker ('/downloads/sskernel.pdf');><img src=../tmp/icons/pdf.jpg width=16 height=16 border=0 align=absbottom /></a> <br><br>");
-	WIN_RESULTS.document.writeln("<font color=#FF0000>Optimal Bandwidth: <b>"+opt.toPrecision(6)+"</b></font><br><br>");
-	WIN_RESULTS.document.writeln("<h3>Data of the optimized kernel density estimate</h3><hr><table width=300><tr align=right><td width=150> X-AXIS </td> <td width=150> DENSITY </td>");
-	for (i in opty) {
-		WIN_RESULTS.document.writeln("<tr align=right><td>"+spike_time[i].toPrecision(5)+"</td><td width=150>"+opty[i].toPrecision(5)+"</td>");
+	WIN_RESULTS.document.writeln("<title>Data Sheet of the Optimized Histogram</title>");
+	WIN_RESULTS.document.writeln("<h2>Histgram: Kernel Density Estimation</h2>");
+	WIN_RESULTS.document.writeln("Optimal Bandwidth: <b>"+opt.toFixed(3)+"</b><br><br>");
+	WIN_RESULTS.document.writeln("<table border=1><tr align=center><td width=150> X-AXIS (time)  </td>");
+	for (var i=0;i<spike_time.length;i++) {
+		WIN_RESULTS.document.writeln("<td>"+spike_time[i].toFixed(3)+"</td>");
 	}
-	WIN_RESULTS.document.writeln("</table><br>");
-	/*
-	WIN_RESULTS.document.writeln("<h3>Cost Function</h3><hr><table width=300><tr align=right><td width=150> Bandwidth </td> <td width=150> Cost </td>");
-	for (i in C) {
-		WIN_RESULTS.document.writeln("<tr align=right><td>"+W[i].toPrecision(5)+"</td><td width=150>"+C[i].toPrecision(5)+"</td>");
+	WIN_RESULTS.document.writeln("</tr><tr align=center><td width=150> Y-AXIS (density) </td>");
+	for (var i=0;i<spike_time.length;i++) {
+		WIN_RESULTS.document.writeln("<td>"+opty[i].toFixed(3)+"</td>");
 	}
-	WIN_RESULTS.document.writeln("</table><br>");
-	*/
-	WIN_RESULTS.document.writeln("</blockquote>");
+	WIN_RESULTS.document.writeln("</tr></table><br>");
 	WIN_RESULTS.document.close();
 }
 
@@ -573,24 +610,18 @@ function OutputResults_Kernel2() {
 	kern2(spike_time, opt, opty);
 	WIN_RESULTS = window.open();
 	WIN_RESULTS.document.open();
-	WIN_RESULTS.document.writeln("<title>Data Sheet of the Optimized Histogram</title>");																																				
-	WIN_RESULTS.document.writeln("<blockquote>&copy; 2009 Hideaki Shimazaki<br><br>");
-	WIN_RESULTS.document.writeln("<h2>Data Sheet of Your Optimized Kernel Density Estimation</h2>");
-	WIN_RESULTS.document.writeln("For the details of the method, please refer to<br>Shimazaki H. and Shinomoto S., Kernel Bandwidth Optimization in Spike Rate Estimation, <em>Journal of Computational Neuroscience</em>, Vol.29, Pages 171-182., 2010 <a href=http://www.springerlink.com/content/g22785288648l239/fulltext.pdf target=_blank  onclick=javascript:urchinTracker ('/downloads/sskernel.pdf');><img src=../tmp/icons/pdf.jpg width=16 height=16 border=0 align=absbottom /></a> <br><br>");
-	WIN_RESULTS.document.writeln("<font color=#FF0000>Optimal Bandwidth: <b>"+opt.toPrecision(6)+"</b></font><br><br>");
-	WIN_RESULTS.document.writeln("<h3>Data of the optimized kernel density estimate</h3><hr><table width=300><tr align=right><td width=150> X-AXIS </td> <td width=150> DENSITY </td>");
-	for (i in opty) {
-		WIN_RESULTS.document.writeln("<tr align=right><td>"+spike_time[i].toPrecision(5)+"</td><td width=150>"+opty[i].toPrecision(5)+"</td>");
+	WIN_RESULTS.document.writeln("<title>Data Sheet of the Optimized Histogram</title>");
+	WIN_RESULTS.document.writeln("<h2>Histgram: Kernel Density Estimation</h2>");
+	WIN_RESULTS.document.writeln("Optimal Bandwidth: <b>"+opt.toFixed(3)+"</b><br><br>");
+	WIN_RESULTS.document.writeln("<table border=1><tr align=center><td width=150> X-AXIS (time)  </td>");
+	for (var i=0;i<spike_time.length;i++) {
+		WIN_RESULTS.document.writeln("<td>"+spike_time[i].toFixed(3)+"</td>");
 	}
-	WIN_RESULTS.document.writeln("</table><br>");
-	/*
-	WIN_RESULTS.document.writeln("<h3>Cost Function</h3><hr><table width=300><tr align=right><td width=150> Bandwidth </td> <td width=150> Cost </td>");
-	for (i in C) {
-		WIN_RESULTS.document.writeln("<tr align=right><td>"+W[i].toPrecision(5)+"</td><td width=150>"+C[i].toPrecision(5)+"</td>");
+	WIN_RESULTS.document.writeln("</tr><tr align=center><td width=150> Y-AXIS (density) </td>");
+	for (var i=0;i<spike_time.length;i++) {
+		WIN_RESULTS.document.writeln("<td>"+opty[i].toFixed(3)+"</td>");
 	}
-	WIN_RESULTS.document.writeln("</table><br>");
-	*/
-	WIN_RESULTS.document.writeln("</blockquote>");
+	WIN_RESULTS.document.writeln("</tr></table><br>");
 	WIN_RESULTS.document.close();
 }
 
@@ -598,32 +629,59 @@ function OutputResults_HMM() {
 	var spike_time = new Array();
 	PostData(spike_time);
 	var opty;
-	var opt = 0.05;
+	var opt = (offset-onset)/(spike_time.length-1);
+	var time = 0;
 	opty = get_hmm_ratefunc(spike_time, opt);	//描画の細かさ0.05 ?
-	var result;
-	result+="The rate estimated by two state hidden Markov model.<br> time / rate<br>";
-    var time = 0;
-	for(var i=0;i<opty.length;i++)
-	{
-		result+= (time.toFixed(2))+ "&nbsp;&nbsp;&nbsp;&nbsp;" + opty[i][1]+ "<br>";
+
+	WIN_RESULTS = window.open();
+	WIN_RESULTS.document.open();
+	WIN_RESULTS.document.writeln("<title>Data Sheet of the Optimized Histogram</title>");
+	WIN_RESULTS.document.writeln("<h2>Histgram: Two state hidden Markov model</h2>");
+	WIN_RESULTS.document.writeln("<table border=1><tr align=center><td width=150> X-AXIS (time)  </td>");
+	WIN_RESULTS.document.writeln("<td>0.00</td><td>"+time.toFixed(3)+"</td>");
+	time+=opt;
+	for (var i=1;i<opty.length;i++) {
+		if(opty[i][1]!=opty[i-1][1]){
+			WIN_RESULTS.document.writeln("<td>"+time.toFixed(2)+"</td>");
+			WIN_RESULTS.document.writeln("<td>"+time.toFixed(2)+"</td>");
+		}
 		time+=opt;
 	}
-	document.write(result);
+	WIN_RESULTS.document.writeln("<td>"+ time.toFixed(2) +"</td><td>"+ time.toFixed(2) +"</td></tr><tr align=center><td width=150> Y-AXIS (density) </td>");
+	WIN_RESULTS.document.writeln("<td>0.000</td><td>"+opty[0][1].toFixed(3)+"</td>");
+	for (var i=1;i<opty.length;i++) {
+		if(opty[i][1]!=opty[i-1][1]){
+			WIN_RESULTS.document.writeln("<td>"+opty[i-1][1].toFixed(3)+"</td>");
+			WIN_RESULTS.document.writeln("<td>"+opty[i][1].toFixed(3)+"</td>");
+		}
+	}
+	WIN_RESULTS.document.writeln("<td>" + opty[opty.length-1][1].toFixed(3) + "</td><td>0.000</td></tr></table><br>");
+	WIN_RESULTS.document.writeln("</tr></table><br>");
+	WIN_RESULTS.document.writeln("</blockquote>");
+	WIN_RESULTS.document.close();
 }
 
 function OutputResults_Bayes(){
 	var spike_time = new Array();
 	PostData(spike_time);
 	var opty;
-	//opty = NGF();
-	var result;
-	result+="The rate estimated by Bayesian model.<br> time / rate<br>";
-/*
-	for(var i=0;i<opty.length;i++)
-	{
-		result+= (time.toFixed(2))+ "&nbsp;&nbsp;&nbsp;&nbsp;" + opty[i][1]+ "<br>";
-		time+=opt;
+	var kalman_data = SecondStage(spike_time);
+	// ThirdStage(spike_time,beta);
+
+	WIN_RESULTS = window.open();
+	WIN_RESULTS.document.open();
+	WIN_RESULTS.document.writeln("<title>Data Sheet of the Optimized Histogram</title>");
+	WIN_RESULTS.document.writeln("<h2>Histgram: Bayesian model Estimation</h2>");
+	WIN_RESULTS.document.writeln("<br><br>");
+	WIN_RESULTS.document.writeln("<table border=1><tr align=center><td width=150> X-AXIS (time)  </td>");
+	for (var i=0;i<spike_time.length;i++) {
+		WIN_RESULTS.document.writeln("<td>"+spike_time[i].toFixed(3)+"</td>");
 	}
-	*/
-	document.write(result);
+	WIN_RESULTS.document.writeln("</tr><tr align=center><td width=150> Y-AXIS (density) </td>");
+	for (var i=0;i<spike_time.length-1;i++) {
+		WIN_RESULTS.document.writeln("<td>"+kalman_data[0][i].toFixed(3)+"</td>");
+	}
+	WIN_RESULTS.document.writeln("<td>"+kalman_data[0][spike_time.length-2].toFixed(3)+"</td>");
+	WIN_RESULTS.document.writeln("</tr></table><br>");
+	WIN_RESULTS.document.close();
 }
