@@ -47,7 +47,7 @@ function EMmethod(spike_time,beta0){
 				T0 += 1;	// interspike interval がゼロのものがあったときの補正
 			}
 		}
-		beta2 = (N-T0-1)/2*(beta2);
+	        beta2 = (N-T0-1)/(2*beta2);
 	}
 	return beta2;
 }
